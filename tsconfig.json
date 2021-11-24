@@ -12,6 +12,6 @@
     "noImplicitAny": true,
     "skipLibCheck": true
   },
-  "include": ["declaration.d.ts", "**/*.ts", "*.ts"],
+  "include": ["declaration.d.ts", "src/**/*.ts", "*.ts"],
   "exclude": ["node_modules"]
 }

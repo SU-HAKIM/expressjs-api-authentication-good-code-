@@ -7,11 +7,14 @@ import express, {
   Response,
   ErrorRequestHandler,
   urlencoded,
+  RequestHandler,
 } from "express";
 
 import AuthRoute from "./routers/auth.route";
 
 import "./helpers/init_mongodb";
+import { verifyAccessToken } from "./helpers/jwt_helper";
+import { JwtPayload } from "jsonwebtoken";
 
 dotenv.config();
 
@@ -20,9 +23,14 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(urlencoded({ extended: true }));
 
-app.get("/", async (req: Request, res: Response, next: NextFunction) => {
-  res.send("Hello from express");
-});
+app.get(
+  "/",
+  verifyAccessToken as RequestHandler,
+  async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.headers["authorization"]);
+    res.send("Hello from express");
+  }
+);
 
 app.use("/auth", AuthRoute);
 
