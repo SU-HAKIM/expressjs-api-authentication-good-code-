@@ -13,8 +13,8 @@ import express, {
 import AuthRoute from "./routers/auth.route";
 
 import "./helpers/init_mongodb";
+import "./helpers/init_redis";
 import { verifyAccessToken } from "./helpers/jwt_helper";
-import { JwtPayload } from "jsonwebtoken";
 
 dotenv.config();
 

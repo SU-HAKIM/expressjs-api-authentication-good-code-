@@ -3,7 +3,11 @@ import createError from "http-errors";
 import User from "../models/user.model";
 
 import { authSchema } from "../helpers/validationSchema";
-import { signAccessToken } from "../helpers/jwt_helper";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../helpers/jwt_helper";
 
 export const registerController = async (
   req: Request,
@@ -23,8 +27,8 @@ export const registerController = async (
     const user = new User(result);
     const savedUser = await user.save();
     const accessToken = await signAccessToken(String(user._id));
-    console.log("called");
-    res.send({ accessToken });
+    const refreshToken = await signRefreshToken(String(user._id));
+    res.send({ accessToken, refreshToken });
   } catch (error: any) {
     if (error.isJoi === true) error.status = 422;
     next(error);
@@ -44,8 +48,9 @@ export const loginController = async (
     if (!isMatch)
       throw new createError.Unauthorized("Username/Password not valid");
     const accessToken = await signAccessToken(String(user._id));
+    const refreshToken = await signRefreshToken(String(user._id));
 
-    res.send({ accessToken });
+    res.send({ accessToken, refreshToken });
   } catch (error: any) {
     if (error.isJoi === true)
       return next(new createError.BadRequest("Invalid username/password."));
@@ -66,5 +71,14 @@ export const refreshTokenController = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.send("fresh-token router");
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) throw new createError.BadRequest();
+    const userId = await verifyRefreshToken(refreshToken);
+    const accessToken = await signAccessToken(String(userId));
+    const newRefreshToken = await signRefreshToken(String(userId));
+    res.send({ accessToken, newRefreshToken });
+  } catch (error) {
+    next(error);
+  }
 };
