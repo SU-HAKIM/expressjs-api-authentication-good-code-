@@ -8,6 +8,7 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../helpers/jwt_helper";
+import client from "../helpers/init_redis";
 
 export const registerController = async (
   req: Request,
@@ -63,7 +64,21 @@ export const logoutController = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.send("logout router");
+  try {
+    let { refreshToken } = req.body;
+    if (!refreshToken) throw new createError.BadRequest();
+    const userId = await verifyRefreshToken(refreshToken);
+    client.DEL(userId as string, (err, val) => {
+      if (err) {
+        console.log(err);
+        throw new createError.InternalServerError();
+      }
+      console.log(val);
+      res.sendStatus(204);
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const refreshTokenController = async (
